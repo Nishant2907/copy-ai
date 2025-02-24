@@ -60,6 +60,7 @@ export default function WorkflowEditor({ id }: { id: string }) {
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [pendingTabChange, setPendingTabChange] = useState<number | null>(null);
     const [insertPosition, setInsertPosition] = useState<number | null>(null);
+    const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
 
     // Handlers
     // Check if there are unsaved changes in the workflow
@@ -214,6 +215,8 @@ export default function WorkflowEditor({ id }: { id: string }) {
     const handleRunWorkflow = async () => {
         if (triggerInputs.length === 0) return; // Exit if no inputs
 
+        setIsWorkflowRunning(true);
+
         const processedActions = actions.map(action => {
             let processedPrompt = action.prompt;
             triggerInputs.forEach(input => {
@@ -258,6 +261,8 @@ export default function WorkflowEditor({ id }: { id: string }) {
             });
         } catch (error) {
             console.error('Error running workflow:', error);
+        } finally {
+            setIsWorkflowRunning(false); // Reset running state
         }
     };
 
@@ -377,11 +382,11 @@ export default function WorkflowEditor({ id }: { id: string }) {
                         ))}
 
                         <button
-                            className={`w-full flex items-center justify-center px-4 py-2 font-medium rounded-lg shadow-sm ${triggerInputs.some(input => !runInputValues[input.id]) ? "cursor-not-allowed bg-gray-400 text-gray-100" : "bg-purple-600 hover:bg-purple-700 text-purple-100"}`}
+                            className={`w-full flex items-center justify-center px-4 py-2 font-medium rounded-lg shadow-sm ${triggerInputs.some(input => !runInputValues[input.id]) || isWorkflowRunning ? "cursor-not-allowed bg-gray-400 text-gray-100" : "bg-purple-600 hover:bg-purple-700 text-purple-100"}`}
                             onClick={handleRunWorkflow}
-                            disabled={triggerInputs.some(input => !runInputValues[input.id])}
+                            disabled={triggerInputs.some(input => !runInputValues[input.id]) || isWorkflowRunning}
                         >
-                            ▶ Run Workflow
+                            {isWorkflowRunning ? "Running Workflow..." : "▶ Run Workflow"}
                         </button>
 
                         <button className="mt-4 flex items-center justify-center w-full px-4 py-2 text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition"
