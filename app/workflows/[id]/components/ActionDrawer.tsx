@@ -25,7 +25,6 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
   const [showActionForm, setShowActionForm] = useState(false);
   const [newAction, setNewAction] = useState({ prompt: "", backgroundData: "" });
   const [variableAnchorEl, setVariableAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedTextArea, setSelectedTextArea] = useState<HTMLTextAreaElement | null>(null);
 
   // Set initial values if editing
   useEffect(() => {
@@ -36,15 +35,13 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
   }, [editingAction]);
 
   // Opens the variable menu when user type (#) in the prompt text area
-  const handleVariableMenuOpen = (event: React.MouseEvent<HTMLElement>, textArea: HTMLTextAreaElement) => {
+  const handleVariableMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setVariableAnchorEl(event.currentTarget); // Set the anchor element for the menu
-    setSelectedTextArea(textArea); // Set the currently selected text area
   };
 
   // Closes the variable menu and clears the selected text area
   const handleVariableMenuClose = () => {
     setVariableAnchorEl(null); // Clear the anchor element
-    setSelectedTextArea(null); // Clear the selected text area
   };
 
   // Adds a variable to the end of the prompt
@@ -101,7 +98,7 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
             maxRows={Infinity}
             onKeyDown={(e) => {
               if (e.key === "#") {
-                handleVariableMenuOpen(e as any, e.target as HTMLTextAreaElement);
+                handleVariableMenuOpen(e as any);
               }
             }}
           />
