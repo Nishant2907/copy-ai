@@ -25,6 +25,7 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
   const [showActionForm, setShowActionForm] = useState(false);
   const [newAction, setNewAction] = useState({ prompt: "", backgroundData: "" });
   const [variableAnchorEl, setVariableAnchorEl] = useState<null | HTMLElement>(null);
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null);
 
   // Set initial values if editing
   useEffect(() => {
@@ -34,29 +35,46 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
     }
   }, [editingAction]);
 
-  // Opens the variable menu when user type (#) in the prompt text area
-  const handleVariableMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setVariableAnchorEl(event.currentTarget); // Set the anchor element for the menu
-  };
-
   // Closes the variable menu and clears the selected text area
   const handleVariableMenuClose = () => {
     setVariableAnchorEl(null); // Clear the anchor element
   };
 
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    // Gives cursor position (0-based index) in the textarea
+    const position = e.target.selectionStart;
+
+    // Show variable menu if # is typed
+    if (value[position - 1] === '#') {
+      // Opens the variable menu when user type (#) in the prompt text area
+      setVariableAnchorEl(e.target);
+      // Set the cursor position
+      setCursorPosition(position);
+    }
+
+    setNewAction({ ...newAction, prompt: value });
+  };
+
+
   // Adds a variable to the end of the prompt
   const handleVariableSelect = (variable: string) => {
-    // Create a template for the variable (how it should look in ui)
-    const template = `#{${variable}}`;
+    if (cursorPosition === null) return;
 
-    // Add the template to the end of the current prompt
-    const newPrompt = newAction.prompt + " " + template;
+    // Get the text before and after the cursor
+    const beforeCursor = newAction.prompt.slice(0, cursorPosition);
+    const afterCursor = newAction.prompt.slice(cursorPosition);
+
+    // Insert the variable template at cursor position, keeping the #
+    const template = `{${variable}}`;
+    const newPrompt = beforeCursor + template + afterCursor;
 
     // Update the prompt with the new variable
-    setNewAction({ ...newAction, prompt: newPrompt.trim() });
+    setNewAction({ ...newAction, prompt: newPrompt });
 
     // Close the variable menu
     handleVariableMenuClose();
+    setCursorPosition(null);
   };
 
   // Adds a new action if the prompt is not empty
@@ -91,16 +109,15 @@ export default function ActionDrawer({ triggerInputs, onAddAction, editingAction
             fullWidth
             label="Prompt"
             value={newAction.prompt}
-            onChange={(e) => setNewAction({ ...newAction, prompt: e.target.value })}
+            // onChange={(e) => setNewAction({ ...newAction, prompt: e.target.value })}
             margin="normal"
+            onChange={handlePromptChange}
             multiline
-            minRows={1}
-            maxRows={Infinity}
-            onKeyDown={(e) => {
-              if (e.key === "#") {
-                handleVariableMenuOpen(e as any);
-              }
-            }}
+          // onKeyDown={(e) => {
+          //   if (e.key === "#") {
+          //     handleVariableMenuOpen(e as any);
+          //   }
+          // }}
           />
 
           <p className="text-sm text-gray-500 mt-1 mb-2">Type # to insert input variables</p>
